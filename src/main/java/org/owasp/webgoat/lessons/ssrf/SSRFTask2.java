@@ -9,7 +9,9 @@ import static org.owasp.webgoat.container.assignments.AttackResultBuilder.succes
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import org.owasp.webgoat.container.assignments.AssignmentEndpoint;
@@ -31,12 +33,20 @@ public class SSRFTask2 implements AssignmentEndpoint {
   }
 
   protected AttackResult furBall(String url) {
+    // Allowlist: only allow the specific expected URL
     if (url.matches("http://ifconfig\\.pro")) {
       String html;
-      try (InputStream in = new URL(url).openStream()) {
-        html =
-            new String(in.readAllBytes(), StandardCharsets.UTF_8)
-                .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
+      try {
+        URL targetUrl = URI.create(url).toURL();
+        HttpURLConnection connection = (HttpURLConnection) targetUrl.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+        try (InputStream in = connection.getInputStream()) {
+          html =
+              new String(in.readAllBytes(), StandardCharsets.UTF_8)
+                  .replaceAll("\n", "<br>"); // Otherwise the \n gets escaped in the response
+        }
       } catch (MalformedURLException e) {
         return getFailedResult(e.getMessage());
       } catch (IOException e) {

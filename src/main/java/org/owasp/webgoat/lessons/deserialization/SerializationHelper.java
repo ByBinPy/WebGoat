@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -20,6 +21,9 @@ public class SerializationHelper {
   public static Object fromString(String s) throws IOException, ClassNotFoundException {
     byte[] data = Base64.getDecoder().decode(s);
     ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+    // Restrict deserialization to safe types to prevent deserialization attacks
+    ois.setObjectInputFilter(ObjectInputFilter.Config.createFilter(
+        "java.lang.*;java.util.*;!*"));
     Object o = ois.readObject();
     ois.close();
     return o;

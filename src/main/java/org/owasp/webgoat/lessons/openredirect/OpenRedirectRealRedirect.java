@@ -4,6 +4,8 @@
  */
 package org.owasp.webgoat.lessons.openredirect;
 
+import java.net.URI;
+import java.util.Set;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,9 +17,20 @@ import org.springframework.web.servlet.ModelAndView;
 @Controller
 public class OpenRedirectRealRedirect {
 
+  private static final Set<String> ALLOWED_HOSTS = Set.of("localhost", "webgoat.org", "owasp.org");
+
   @GetMapping("/OpenRedirect/realRedirect")
   public ModelAndView real(@RequestParam("url") String url) {
-    // Intentionally vulnerable: no validation
+    // Validate redirect URL to prevent open redirect
+    try {
+      URI uri = URI.create(url);
+      String host = uri.getHost();
+      if (host != null && !ALLOWED_HOSTS.contains(host.toLowerCase())) {
+        return new ModelAndView("redirect:/");
+      }
+    } catch (IllegalArgumentException e) {
+      return new ModelAndView("redirect:/");
+    }
     return new ModelAndView("redirect:" + url);
   }
 }

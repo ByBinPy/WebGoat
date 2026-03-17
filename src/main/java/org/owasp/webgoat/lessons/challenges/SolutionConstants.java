@@ -4,8 +4,17 @@
  */
 package org.owasp.webgoat.lessons.challenges;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+
 public interface SolutionConstants {
 
-  // TODO should be random generated when starting the server
-  String PASSWORD = "!!webgoat_admin_1234!!";
+  // Generate a random password at server startup instead of hardcoding
+  String PASSWORD = generateRandomPassword();
+
+  private static String generateRandomPassword() {
+    byte[] randomBytes = new byte[24];
+    new SecureRandom().nextBytes(randomBytes);
+    return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+  }
 }
